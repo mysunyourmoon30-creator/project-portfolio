@@ -1,5 +1,10 @@
 <Solution>
   <Folder Name="/src/" />
+  <Folder Name="/src/Backend/">
+    <Project Path="src/Backend/Innovation.Core/Innovation.Core.csproj" />
+    <Project Path="src/Backend/Innovation.Data/Innovation.Data.csproj" />
+    <Project Path="src/Backend/Innovation.Repositories/Innovation.Repositories.csproj" />
+  </Folder>
   <Folder Name="/src/Common/">
     <Project Path="src/Common/Innovation.Mvp.Core/Innovation.Mvp.Core.csproj" />
   </Folder>
@@ -7,6 +12,8 @@
     <Project Path="src/Desktop/Innovation.TotalWeight_PLC/Innovation.TotalWeight_PLC.csproj" />
   </Folder>
   <Folder Name="/tests/">
+    <Project Path="tests/Innovation.Core.Tests/Innovation.Core.Tests.csproj" />
     <Project Path="tests/Innovation.Mvp.Core.Tests/Innovation.Mvp.Core.Tests.csproj" />
+    <Project Path="tests/Innovation.Repositories.Tests/Innovation.Repositories.Tests.csproj" />
   </Folder>
 </Solution>
