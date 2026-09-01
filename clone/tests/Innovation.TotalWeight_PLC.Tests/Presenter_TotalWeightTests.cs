@@ -85,6 +85,25 @@ public class Presenter_TotalWeightTests
         view.Received(1).ShowMessage(Arg.Any<string>(), AppMessageType.Warning);
     }
 
+    // Reproduces a real bug found by running the app: WinForms' DataGridView
+    // commits an edited cell into its bound object BEFORE raising
+    // CellEndEdit, so by the time frmTotalWeight's handler reads row.Actual
+    // and calls this method, the model ALREADY holds the rejected value -
+    // unlike the test above, where row.Actual starts null and the candidate
+    // weight arrives purely as a parameter. This test starts row.Actual
+    // already set to the out-of-range value to match what really happens.
+    [Fact]
+    public async Task SubmitStepWeight_OutsideTolerance_RevertsActualThatGridAlreadyCommitted()
+    {
+        var view = FakeView();
+        view.Steps.Add(new StepRowViewModel { StepNo = 1, Target = 10m, Min = 9.5m, Max = 10.5m, Actual = 12.00m });
+        var presenter = new Presenter_TotalWeight(view, Substitute.For<IApiClient>(), FakeRunner(), FakeScopeFactory());
+
+        await presenter.SubmitStepWeightAsync(1, 12.00m);
+
+        view.Steps.Single().Actual.Should().BeNull();
+    }
+
     [Fact]
     public async Task Save_HappyPath_CallsApiThenShowsConfirmation()
     {

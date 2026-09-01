@@ -90,6 +90,13 @@ public sealed class Presenter_TotalWeight : IPresenter_TotalWeight
         if (actualWeight < row.Min || actualWeight > row.Max)
         {
             View.ShowMessage(Resources.Strings.WeightOutOfRange(row.Min, row.Max), AppMessageType.Warning);
+
+            // WinForms' DataGridView commits an edited cell into its bound
+            // object BEFORE raising CellEndEdit (see frmTotalWeight's
+            // handler) - by the time we get here, row.Actual already IS
+            // actualWeight, rejected or not. Leaving it alone would let an
+            // out-of-range weight silently survive into the next Save.
+            row.Actual = null;
             return Task.CompletedTask;
         }
 

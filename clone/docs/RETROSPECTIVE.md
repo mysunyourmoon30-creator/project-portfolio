@@ -89,16 +89,45 @@ the thing and looking at it - which is exactly what this session did,
 end to end, against a real running API, using UI Automation to drive the
 real WinForms controls.
 
+## A fourth bug: a rejected value silently surviving into Save
+
+A later re-run of the demo script (deliberately re-verifying the full
+checklist end to end, not just spot-checking) entered an out-of-range
+weight (12.00, tolerance [9.5, 10.5]), got the expected warning, then
+clicked **Save** *without correcting the value*. The API log showed the
+save going through anyway - `RM_BAL` withdrawn, `TotalWeight` inserted -
+using the rejected 12.00.
+
+The cause: WinForms' `DataGridView` commits an edited cell into its bound
+object **before** raising `CellEndEdit` - by the time
+`Presenter_TotalWeight.SubmitStepWeightAsync` runs its tolerance check,
+`row.Actual` already equals the candidate weight, rejected or not. The
+existing unit test (`SubmitStepWeight_OutsideTolerance_ShowsWarning_DoesNotSetActual`)
+never caught this because it calls the presenter method directly with
+`row.Actual` starting at `null` - a mental model of the interaction that
+doesn't match how the real `DataGridView` event actually fires. Fixed by
+explicitly setting `row.Actual = null` in the rejection branch, and added a
+second test (`SubmitStepWeight_OutsideTolerance_RevertsActualThatGridAlreadyCommitted`)
+that starts `row.Actual` already set to the rejected value, matching reality.
+
+**Lesson, reinforced again:** a unit test can be internally consistent and
+still encode the wrong assumption about *when* a UI framework mutates
+shared state relative to the event it raises. The fix came from re-running
+the exact same demo script a second time end to end rather than assuming
+"already verified once" was enough - the first run happened to always
+correct the value before saving, so the gap never surfaced until a
+verification pass tried the "reject then save without fixing it" path.
+
 ## What I'd do differently with more time
 
 - Build the WinForms designer surfaces properly (this clone hand-writes
   `.Designer.cs` files; a real Visual Studio session with the visual
   designer would produce cleaner control layouts).
-- Screenshot and interactively click through the actual UI - this was built
-  and verified via `dotnet build`/`dotnet test`/`dotnet run` from a
-  non-interactive environment, so the visual layer is unverified beyond "it
-  launches without throwing."
 - Cover all 16 entities with dedicated repository contract tests rather than
   the representative subset + schema-smoke-test approach `RepositoryImplTests`
   takes, if the goal shifts from "demonstrate the pattern" to "guarantee
   every table's mapping."
+- Audit every other `DataGridView`-bound field for the same "grid commits
+  before the handler runs" assumption - `Accepted` is a checkbox column
+  bound the same way and was never stress-tested with a rejected/reverted
+  value the way `Actual` was here.
