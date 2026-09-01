@@ -56,6 +56,39 @@ doing (view notifying presenter of user actions) just moves the cycle from
 running the app - not just running unit tests with mocked views - is what
 surfaced this.
 
+## Two more bugs a real run caught, that unit tests missed
+
+After the DI-cycle fix, the app started but pressing Enter in the barcode
+field, clicking Save, and clicking Accept all did *nothing* - no error, no
+API call, no log line. The cause: `Program.cs`'s composition root resolved
+`IView_TotalWeight` from the container to get the main form, but never
+resolved `IPresenter_TotalWeight`. Since `Presenter_TotalWeight`'s
+constructor is where it subscribes to the view's events
+(`BarcodeScanned`, `SaveRequested`, etc.), and nothing ever asked the
+container for that presenter, it was simply never constructed - the view sat
+there with zero subscribers on every event. Every `Presenter_TotalWeightTests`
+unit test passed because those tests construct the presenter directly with
+`new Presenter_TotalWeight(...)`, which always wires the events; none of
+them exercise `Program.cs`'s own resolution path. Fixed by resolving the
+presenter (not the view) and reading `presenter.View` back out.
+
+Separately, the save confirmation's message box showed a warning triangle
+instead of an info icon. `ShowMessage`'s icon mapping (`type == Error ?
+Error : Warning`) only special-cased `Error` and silently treated
+`Information` as `Warning` too. Fixed by extracting a proper three-way
+switch into `MessageBoxIconMapper`, shared across all four forms (it had
+been copy-pasted identically into each one), with a test locking in all
+three cases.
+
+**Lesson, reinforced:** both bugs were invisible to a comprehensive unit
+test suite (79 tests, all green) because unit tests exercise the classes
+you construct directly, not the composition root that wires them together
+in the shipped app, and not the exact enum-to-icon mapping a human eye
+would catch in half a second. There is no substitute for actually running
+the thing and looking at it - which is exactly what this session did,
+end to end, against a real running API, using UI Automation to drive the
+real WinForms controls.
+
 ## What I'd do differently with more time
 
 - Build the WinForms designer surfaces properly (this clone hand-writes

@@ -32,7 +32,14 @@ internal static class Program
         }
 
         using var mainScope = ServiceProvider.CreateScope();
-        var mainForm = (Form)mainScope.ServiceProvider.GetRequiredService<IView_TotalWeight>();
+
+        // Resolve the PRESENTER, not just the view: Presenter_TotalWeight's
+        // constructor is where it subscribes to the view's events
+        // (BarcodeScanned, SaveRequested, etc - see IView_TotalWeight).
+        // Resolving only IView_TotalWeight would hand back a live form whose
+        // events nobody is listening to.
+        var mainPresenter = mainScope.ServiceProvider.GetRequiredService<IPresenter_TotalWeight>();
+        var mainForm = (Form)mainPresenter.View;
 
         // Real message loop - the original app never called Application.Run()
         // at all and relied on nested ShowDialog() calls instead (Frontend

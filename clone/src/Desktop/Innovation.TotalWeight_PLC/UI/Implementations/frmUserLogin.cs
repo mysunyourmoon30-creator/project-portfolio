@@ -26,8 +26,7 @@ public partial class frmUserLogin : Form, IView_UserLogin
     public void Run() => ShowDialog();
 
     public void ShowMessage(string message, AppMessageType type = AppMessageType.Warning) =>
-        MessageBox.Show(message, type.ToString(), MessageBoxButtons.OK,
-            type == AppMessageType.Error ? MessageBoxIcon.Error : MessageBoxIcon.Warning);
+        MessageBox.Show(message, type.ToString(), MessageBoxButtons.OK, Infrastructure.MessageBoxIconMapper.ToIcon(type));
 
     public bool ShowConfirm(string message) =>
         MessageBox.Show(message, "ยืนยัน", MessageBoxButtons.YesNo) == DialogResult.Yes;

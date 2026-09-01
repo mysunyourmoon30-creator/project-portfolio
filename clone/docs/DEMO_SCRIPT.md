@@ -57,12 +57,27 @@ Each of the four failure scenarios (barcode not in RM_BAL, Feeddoor Step not
 configured, DB write failure) asserts `view.DidNotReceive().CloseDialog(...)`
 - the direct fix for the original `NotFound()` bug (Frontend ROADMAP §5b.2).
 
-## 5. Known limitation of this walkthrough
+## 5. Screenshots
 
-This script was written and its automated-test coverage verified in an
-environment without an interactive Windows desktop session, so the WinForms
-UI itself could not be screenshotted or click-tested by hand here - only
-confirmed to launch without a startup exception (DI resolves cleanly) and to
-behave correctly through the presenter-level and full-stack E2E test suites.
-Run this script yourself on a Windows machine with a desktop session to see
-the actual screens.
+This walkthrough was run for real on Windows against the live API, driven
+via UI Automation instead of by hand - each step below is an actual
+screenshot, not a mockup.
+
+![Login](screenshots/01-login.png)
+
+![Kanban loaded](screenshots/02-kanban-loaded.png)
+
+![Weight entered](screenshots/03-weight-entered.png)
+
+![Save confirmation](screenshots/04-save-confirmation.png)
+
+Running this walkthrough for real caught two bugs that no unit test had
+caught (both fixed, both now covered by regression tests) - see
+[`RETROSPECTIVE.md`](RETROSPECTIVE.md) for details:
+
+1. `Program.cs` only resolved `IView_TotalWeight` from the container, never
+   `IPresenter_TotalWeight` - so the presenter (and its event subscriptions)
+   was never constructed, and the barcode/save/accept actions silently did
+   nothing.
+2. `ShowMessage`'s icon mapping only special-cased `Error`, so `Information`
+   messages showed a warning triangle instead of the info icon.
