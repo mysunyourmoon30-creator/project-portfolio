@@ -46,16 +46,43 @@ dotnet run
 
 ## 4. Exercise the "must not close" scenarios
 
-These aren't wired to a button in this trimmed UI (Phase 4 scope), but are
-fully exercised by automated tests you can run to see the behavior directly:
+The main screen has a **ทดสอบ Auto-feed** panel with Barcode / Line ID / Plan
+ID fields and a button - use it to drive `Presenter_ShowAutoFeed` directly:
+
+| Barcode | Line ID | Plan ID | Expected result |
+|---|---|---|---|
+| `RM001` | `1` | `1` | Success - dialog closes itself, shows "ป้อนวัตถุดิบสำเร็จ" |
+| any unknown value, e.g. `NOPE` | `1` | `1` | Warning "ไม่พบบาร์โค้ด...ใน RM_BAL" - **dialog stays open**, click ปิด [Esc] to dismiss |
+| `RM001` | `999` (unconfigured) | `1` | Warning "ไม่ได้ตั้งค่า Feeddoor Step..." - **dialog stays open** |
+| `RM001` | `1` | `999` (no MixTemp row) | **Not an error** - proceeds to success and closes itself, same as the happy path |
+
+Every one of these was run for real (screenshots below), not just asserted
+in a unit test. The same four scenarios are also covered by
+`Presenter_ShowAutoFeedTests` and `Innovation.Hardware.Tests` if you'd rather
+run them headlessly:
 
 ```bash
 dotnet test tests/Innovation.TotalWeight_PLC.Tests/Innovation.TotalWeight_PLC.Tests.csproj --filter Presenter_ShowAutoFeedTests
 ```
 
-Each of the four failure scenarios (barcode not in RM_BAL, Feeddoor Step not
-configured, DB write failure) asserts `view.DidNotReceive().CloseDialog(...)`
-- the direct fix for the original `NotFound()` bug (Frontend ROADMAP §5b.2).
+![Auto-feed panel](screenshots/04b-autofeed-panel.png)
+
+**Barcode not found** - warning shown, dialog still open behind it:
+
+![Barcode not found warning](screenshots/05-autofeed-barcode-not-found-warning.png)
+![Dialog still open](screenshots/05b-autofeed-dialog-still-open.png)
+
+**Feeddoor Step not configured** - warning shown, dialog still open:
+
+![Feeddoor missing warning](screenshots/06-autofeed-feeddoor-missing-warning.png)
+![Dialog still open](screenshots/06b-autofeed-dialog-still-open.png)
+
+**Missing MixTemp (not an error) → success, closes itself:**
+
+![Auto-feed success](screenshots/07-autofeed-success.png)
+
+This is the direct fix for the original `NotFound()` bug (Frontend ROADMAP
+§5b.2), which conflated "report a problem" with "close the form."
 
 ## 5. Screenshots
 

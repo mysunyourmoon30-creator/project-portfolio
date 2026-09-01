@@ -42,7 +42,7 @@ public class HappyPathWeighingE2ETests
         asyncRunner.RunAsync(Arg.Any<string>(), Arg.Any<Func<Task>>(), Arg.Any<Action?>())
             .Returns(ci => ci.Arg<Func<Task>>()());
 
-        var presenter = new Presenter_TotalWeight(view, api, asyncRunner);
+        var presenter = new Presenter_TotalWeight(view, api, asyncRunner, Substitute.For<Microsoft.Extensions.DependencyInjection.IServiceScopeFactory>());
 
         await presenter.LoadKanbanAsync("KB0000001");
         view.KbTogetherId.Should().Be(1);

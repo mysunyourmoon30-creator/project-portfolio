@@ -53,7 +53,7 @@ public class ScenarioE2ETests
         using var factory = new CustomWebApplicationFactory();
         var api = await AuthenticatedClientAsync(factory);
         var view = FakeView();
-        var presenter = new Presenter_TotalWeight(view, api, PassthroughRunner());
+        var presenter = new Presenter_TotalWeight(view, api, PassthroughRunner(), Substitute.For<Microsoft.Extensions.DependencyInjection.IServiceScopeFactory>());
 
         await presenter.LoadKanbanAsync("KB0000001");
         await presenter.SubmitStepWeightAsync(1, 10.05m);
@@ -71,7 +71,7 @@ public class ScenarioE2ETests
         using var factory = new CustomWebApplicationFactory();
         var api = await AuthenticatedClientAsync(factory);
         var view = FakeView();
-        var presenter = new Presenter_TotalWeight(view, api, PassthroughRunner());
+        var presenter = new Presenter_TotalWeight(view, api, PassthroughRunner(), Substitute.For<Microsoft.Extensions.DependencyInjection.IServiceScopeFactory>());
         await presenter.LoadKanbanAsync("KB0000001");
 
         await presenter.SubmitStepWeightAsync(1, 99m); // way outside tolerance

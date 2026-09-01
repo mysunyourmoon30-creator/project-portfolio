@@ -34,6 +34,7 @@ public partial class frmTotalWeight : Form, IView_TotalWeight
     public event EventHandler<StepWeightEnteredEventArgs>? StepWeightEntered;
     public event EventHandler? SaveRequested;
     public event EventHandler<int>? AcceptRequested;
+    public event EventHandler<AutoFeedRequestedEventArgs>? AutoFeedRequested;
 
     public void Run() { } // main window - message loop started by Program.cs, not here
 
@@ -97,5 +98,16 @@ public partial class frmTotalWeight : Form, IView_TotalWeight
         {
             AcceptRequested?.Invoke(this, row.StepNo);
         }
+    }
+
+    private void btnAutoFeed_Click(object sender, EventArgs e)
+    {
+        if (!int.TryParse(txtAutoFeedLineId.Text, out var lineId) || !int.TryParse(txtAutoFeedPlanId.Text, out var planId))
+        {
+            ShowMessage("Line ID และ Plan ID ต้องเป็นตัวเลข", AppMessageType.Warning);
+            return;
+        }
+
+        AutoFeedRequested?.Invoke(this, new AutoFeedRequestedEventArgs(new AutoFeedRequest(txtAutoFeedBarcode.Text, lineId, planId)));
     }
 }

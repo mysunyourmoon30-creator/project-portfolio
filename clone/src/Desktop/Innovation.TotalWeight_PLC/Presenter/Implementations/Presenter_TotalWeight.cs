@@ -5,6 +5,7 @@ using Innovation.TotalWeight_PLC.Interfaces.Presenters;
 using Innovation.TotalWeight_PLC.Interfaces.Views;
 using Innovation.TotalWeight_PLC.Service;
 using Innovation.TotalWeight_PLC.ViewModel;
+using Microsoft.Extensions.DependencyInjection;
 
 namespace Innovation.TotalWeight_PLC.Presenter.Implementations;
 
@@ -12,6 +13,7 @@ public sealed class Presenter_TotalWeight : IPresenter_TotalWeight
 {
     private readonly IApiClient _api;
     private readonly IAsyncOperationRunner _asyncRunner;
+    private readonly IServiceScopeFactory _scopeFactory;
 
     public IView_TotalWeight View { get; }
 
@@ -22,11 +24,12 @@ public sealed class Presenter_TotalWeight : IPresenter_TotalWeight
     // IView_TotalWeight's event members. Each event handler is wrapped in
     // IAsyncOperationRunner here, replacing the original's
     // BaseForm.RunSafeAsync being called from inside the view/code-behind.
-    public Presenter_TotalWeight(IView_TotalWeight view, IApiClient api, IAsyncOperationRunner asyncRunner)
+    public Presenter_TotalWeight(IView_TotalWeight view, IApiClient api, IAsyncOperationRunner asyncRunner, IServiceScopeFactory scopeFactory)
     {
         View = view;
         _api = api;
         _asyncRunner = asyncRunner;
+        _scopeFactory = scopeFactory;
 
         View.BarcodeScanned += (_, barcode) =>
             _ = _asyncRunner.RunAsync(nameof(View.BarcodeScanned), () => LoadKanbanAsync(barcode));
@@ -36,6 +39,8 @@ public sealed class Presenter_TotalWeight : IPresenter_TotalWeight
             _ = _asyncRunner.RunAsync(nameof(View.SaveRequested), SaveAsync);
         View.AcceptRequested += (_, stepNo) =>
             _ = _asyncRunner.RunAsync(nameof(View.AcceptRequested), () => AcceptStepAsync(stepNo));
+        View.AutoFeedRequested += (_, e) =>
+            _ = _asyncRunner.RunAsync(nameof(View.AutoFeedRequested), () => RunAutoFeedAsync(e.Request));
     }
 
     public void Run() => View.Run();
@@ -131,5 +136,27 @@ public sealed class Presenter_TotalWeight : IPresenter_TotalWeight
         {
             View.ShowMessage(Resources.Strings.StepNotAccepted, AppMessageType.Warning);
         }
+    }
+
+    // Opens Presenter_ShowAutoFeed's dialog in its own DI scope. Shown
+    // modelessly (Show(), not ShowDialog()) and then awaited via
+    // FormClosed, rather than the more obvious
+    // `autoFeedForm.ShowDialog()` after starting the async work - a fast
+    // localhost round trip could otherwise call CloseDialog() (which
+    // disposes the form) before ShowDialog() ever gets a chance to display
+    // it, throwing ObjectDisposedException. Show() guarantees the window
+    // exists and is visible before RunAsync is allowed to touch it.
+    public async Task RunAutoFeedAsync(AutoFeedRequest request)
+    {
+        using var scope = _scopeFactory.CreateScope();
+        var autoFeedPresenter = scope.ServiceProvider.GetRequiredService<IPresenter_ShowAutoFeed>();
+        var autoFeedForm = (Form)autoFeedPresenter.View;
+
+        var closedTcs = new TaskCompletionSource();
+        autoFeedForm.FormClosed += (_, _) => closedTcs.TrySetResult();
+
+        autoFeedForm.Show();
+        await autoFeedPresenter.RunAsync(request);
+        await closedTcs.Task;
     }
 }

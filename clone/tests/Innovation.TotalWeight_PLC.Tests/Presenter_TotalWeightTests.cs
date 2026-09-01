@@ -1,6 +1,7 @@
 using System.ComponentModel;
 using FluentAssertions;
 using Innovation.Mvp.Core.Async;
+using Microsoft.Extensions.DependencyInjection;
 using Innovation.Services.Contracts;
 using Innovation.Services.Errors;
 using Innovation.TotalWeight_PLC.Interfaces.Views;
@@ -26,6 +27,11 @@ public class Presenter_TotalWeightTests
     // that's needed to satisfy the constructor.
     private static IAsyncOperationRunner FakeRunner() => Substitute.For<IAsyncOperationRunner>();
 
+    // Auto-feed is orchestrated through a DI scope (RunAutoFeedAsync), not
+    // exercised by these tests - Presenter_ShowAutoFeedTests covers that
+    // logic directly. A substitute is enough to satisfy the constructor.
+    private static IServiceScopeFactory FakeScopeFactory() => Substitute.For<IServiceScopeFactory>();
+
     [Fact]
     public async Task LoadKanban_ValidBarcode_PopulatesStepsOnView()
     {
@@ -33,7 +39,7 @@ public class Presenter_TotalWeightTests
         var api = Substitute.For<IApiClient>();
         api.GetKanbanAsync("KB0000001").Returns(new KanbanDetailDto(1, "KB0000001", 1, 1, "Pending",
             new List<KanbanStepDto> { new(1, "RM001", 10m, 9.5m, 10.5m, null, false) }));
-        var presenter = new Presenter_TotalWeight(view, api, FakeRunner());
+        var presenter = new Presenter_TotalWeight(view, api, FakeRunner(), FakeScopeFactory());
 
         await presenter.LoadKanbanAsync("KB0000001");
 
@@ -47,7 +53,7 @@ public class Presenter_TotalWeightTests
         var view = FakeView();
         var api = Substitute.For<IApiClient>();
         api.GetKanbanAsync("BAD").Returns<KanbanDetailDto>(_ => throw new BarcodeNotFoundException("BAD"));
-        var presenter = new Presenter_TotalWeight(view, api, FakeRunner());
+        var presenter = new Presenter_TotalWeight(view, api, FakeRunner(), FakeScopeFactory());
 
         await presenter.LoadKanbanAsync("BAD");
 
@@ -59,7 +65,7 @@ public class Presenter_TotalWeightTests
     {
         var view = FakeView();
         view.Steps.Add(new StepRowViewModel { StepNo = 1, Target = 10m, Min = 9.5m, Max = 10.5m });
-        var presenter = new Presenter_TotalWeight(view, Substitute.For<IApiClient>(), FakeRunner());
+        var presenter = new Presenter_TotalWeight(view, Substitute.For<IApiClient>(), FakeRunner(), FakeScopeFactory());
 
         await presenter.SubmitStepWeightAsync(1, 10.05m);
 
@@ -71,7 +77,7 @@ public class Presenter_TotalWeightTests
     {
         var view = FakeView();
         view.Steps.Add(new StepRowViewModel { StepNo = 1, Target = 10m, Min = 9.5m, Max = 10.5m });
-        var presenter = new Presenter_TotalWeight(view, Substitute.For<IApiClient>(), FakeRunner());
+        var presenter = new Presenter_TotalWeight(view, Substitute.For<IApiClient>(), FakeRunner(), FakeScopeFactory());
 
         await presenter.SubmitStepWeightAsync(1, 11.2m);
 
@@ -85,7 +91,7 @@ public class Presenter_TotalWeightTests
         var view = FakeView();
         view.Steps.Add(new StepRowViewModel { StepNo = 1, Target = 10m, Min = 9.5m, Max = 10.5m, Actual = 10m });
         var api = Substitute.For<IApiClient>();
-        var presenter = new Presenter_TotalWeight(view, api, FakeRunner());
+        var presenter = new Presenter_TotalWeight(view, api, FakeRunner(), FakeScopeFactory());
 
         await presenter.SaveAsync();
 
@@ -103,7 +109,7 @@ public class Presenter_TotalWeightTests
         var api = Substitute.For<IApiClient>();
         api.SaveTotalWeightAsync(Arg.Any<SaveTotalWeightRequestDto>(), Arg.Any<CancellationToken>())
             .Returns<SaveTotalWeightResultDto>(_ => throw new TotalWeightAlreadyExistsException(1));
-        var presenter = new Presenter_TotalWeight(view, api, FakeRunner());
+        var presenter = new Presenter_TotalWeight(view, api, FakeRunner(), FakeScopeFactory());
 
         var act = () => presenter.SaveAsync();
 
@@ -119,7 +125,7 @@ public class Presenter_TotalWeightTests
         var api = Substitute.For<IApiClient>();
         api.AcceptAsync(Arg.Any<AcceptStepRequestDto>(), Arg.Any<CancellationToken>())
             .Returns(_ => throw new StepNotAcceptedException(1));
-        var presenter = new Presenter_TotalWeight(view, api, FakeRunner());
+        var presenter = new Presenter_TotalWeight(view, api, FakeRunner(), FakeScopeFactory());
 
         await presenter.AcceptStepAsync(1);
 
