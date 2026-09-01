@@ -4,3 +4,6 @@ obj/
 .vs/
 clone/data/*.db
 clone/data/*.db-*
+*.db
+*.db-shm
+*.db-wal
