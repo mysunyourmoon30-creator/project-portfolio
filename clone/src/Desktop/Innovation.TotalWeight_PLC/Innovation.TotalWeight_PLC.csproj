@@ -2,10 +2,13 @@
 
   <ItemGroup>
     <ProjectReference Include="..\..\Common\Innovation.Mvp.Core\Innovation.Mvp.Core.csproj" />
+    <ProjectReference Include="..\..\Backend\Innovation.Services\Innovation.Services.csproj" />
+    <ProjectReference Include="..\..\Hardware\Innovation.Hardware\Innovation.Hardware.csproj" />
   </ItemGroup>
 
   <ItemGroup>
     <PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="8.0.1" />
+    <PackageReference Include="Microsoft.Extensions.Http" Version="8.0.1" />
   </ItemGroup>
 
   <PropertyGroup>

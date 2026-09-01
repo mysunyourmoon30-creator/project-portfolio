@@ -3,6 +3,6 @@ using Innovation.TotalWeight_PLC.Interfaces.Presenters;
 
 namespace Innovation.TotalWeight_PLC.Interfaces.Views;
 
-public interface IView_Main : IView<IPresenter_Main>
+public interface IView_ShowAutoFeed : IViewBase, IView<IPresenter_ShowAutoFeed>
 {
 }

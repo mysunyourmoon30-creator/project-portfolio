@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <xsd:schema id="root" xmlns="" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:msdata="urn:schemas-microsoft-com:xml-msdata">
+    <xsd:element name="root" msdata:IsDataSet="true">
+      <xsd:complexType>
+        <xsd:choice maxOccurs="unbounded">
+          <xsd:element name="data">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1" />
+              </xsd:sequence>
+              <xsd:attribute name="name" type="xsd:string" use="required" msdata:Ordinal="1" />
+              <xsd:attribute name="type" type="xsd:string" msdata:Ordinal="3" />
+            </xsd:complexType>
+          </xsd:element>
+        </xsd:choice>
+      </xsd:complexType>
+    </xsd:element>
+  </xsd:schema>
+  <resheader name="resmimetype"><value>text/microsoft-resx</value></resheader>
+  <resheader name="version"><value>2.0</value></resheader>
+  <resheader name="reader"><value>System.Resources.ResXResourceReader, System.Windows.Forms</value></resheader>
+  <resheader name="writer"><value>System.Resources.ResXResourceWriter, System.Windows.Forms</value></resheader>
+
+  <!-- Moved 1:1 from the original's hardcoded Thai strings - wording must
+       not change even by one character (Frontend ROADMAP §8.6 /
+       REFACTOR_GUIDE.md discipline). English translations are the cuttable
+       part per README §8.5; this file's existence and structure is not. -->
+  <data name="BarcodeNotFound" xml:space="preserve"><value>ไม่พบคัมบัง: {0}</value></data>
+  <data name="WeightOutOfRange" xml:space="preserve"><value>น้ำหนักต้องอยู่ในช่วง {0:0.00} - {1:0.00}</value></data>
+  <data name="SaveSuccess" xml:space="preserve"><value>บันทึกน้ำหนักเรียบร้อยแล้ว</value></data>
+  <data name="TotalWeightAlreadyExists" xml:space="preserve"><value>มีการบันทึกน้ำหนักของคัมบังนี้ไปแล้ว</value></data>
+  <data name="StepNotAccepted" xml:space="preserve"><value>ต้องบันทึกน้ำหนักขั้นตอนนี้ (Save) ก่อนกด Accept</value></data>
+  <data name="RmBalNotFound" xml:space="preserve"><value>ไม่พบบาร์โค้ด {0} ใน RM_BAL</value></data>
+  <data name="FeeddoorStepNotConfigured" xml:space="preserve"><value>ไม่ได้ตั้งค่า Feeddoor Step สำหรับไลน์นี้ - ข้ามการเปิดประตูป้อน</value></data>
+  <data name="AutoFeedDbWriteFailed" xml:space="preserve"><value>เขียนฐานข้อมูลไม่สำเร็จระหว่าง auto-feed</value></data>
+  <data name="AutoFeedSuccess" xml:space="preserve"><value>ป้อนวัตถุดิบสำเร็จ</value></data>
+  <data name="InvalidCredentials" xml:space="preserve"><value>ชื่อผู้ใช้หรือรหัสผ่านไม่ถูกต้อง</value></data>
+  <data name="NoStepsWeighed" xml:space="preserve"><value>กรุณาชั่งน้ำหนักอย่างน้อยหนึ่งขั้นตอนก่อนบันทึก</value></data>
+</root>
