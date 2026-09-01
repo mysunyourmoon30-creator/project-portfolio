@@ -44,6 +44,18 @@ dotnet run
 6. Select the step row and click **ยืนยัน (Accept) [F2]** (or press F2). The
    row's Accepted checkbox flips to true.
 
+This full flow was run for real on Windows against the live API (not just
+asserted in a test). Doing so caught two bugs that no unit test had caught
+(both fixed, both now covered by regression tests) - see
+[`RETROSPECTIVE.md`](RETROSPECTIVE.md) for details:
+
+1. `Program.cs` only resolved `IView_TotalWeight` from the container, never
+   `IPresenter_TotalWeight` - so the presenter (and its event subscriptions)
+   was never constructed, and the barcode/save/accept actions silently did
+   nothing.
+2. `ShowMessage`'s icon mapping only special-cased `Error`, so `Information`
+   messages showed a warning triangle instead of the info icon.
+
 ## 4. Exercise the "must not close" scenarios
 
 The main screen has a **ทดสอบ Auto-feed** panel with Barcode / Line ID / Plan
@@ -56,74 +68,35 @@ ID fields and a button - use it to drive `Presenter_ShowAutoFeed` directly:
 | `RM001` | `999` (unconfigured) | `1` | Warning "ไม่ได้ตั้งค่า Feeddoor Step..." - **dialog stays open** |
 | `RM001` | `1` | `999` (no MixTemp row) | **Not an error** - proceeds to success and closes itself, same as the happy path |
 
-Every one of these was run for real (screenshots below), not just asserted
-in a unit test. The same four scenarios are also covered by
-`Presenter_ShowAutoFeedTests` and `Innovation.Hardware.Tests` if you'd rather
-run them headlessly:
+Every one of these four was run for real against the live API, not just
+asserted in a unit test - each failure case left the dialog genuinely open
+(confirmed via its window handle still existing) with the "ปิด [Esc]" button
+available, and the API log confirmed which lookup failed in each case. The
+same four scenarios are also covered by `Presenter_ShowAutoFeedTests` and
+`Innovation.Hardware.Tests` if you'd rather run them headlessly:
 
 ```bash
 dotnet test tests/Innovation.TotalWeight_PLC.Tests/Innovation.TotalWeight_PLC.Tests.csproj --filter Presenter_ShowAutoFeedTests
 ```
 
-![Auto-feed panel](screenshots/04b-autofeed-panel.png)
-
-**Barcode not found** - warning shown, dialog still open behind it:
-
-![Barcode not found warning](screenshots/05-autofeed-barcode-not-found-warning.png)
-![Dialog still open](screenshots/05b-autofeed-dialog-still-open.png)
-
-**Feeddoor Step not configured** - warning shown, dialog still open:
-
-![Feeddoor missing warning](screenshots/06-autofeed-feeddoor-missing-warning.png)
-![Dialog still open](screenshots/06b-autofeed-dialog-still-open.png)
-
-**Missing MixTemp (not an error) → success, closes itself:**
-
-![Auto-feed success](screenshots/07-autofeed-success.png)
-
 This is the direct fix for the original `NotFound()` bug (Frontend ROADMAP
 §5b.2), which conflated "report a problem" with "close the form."
 
-**Scenario 7 - DB write fails during withdrawal** (RM_BAL/Feeddoor/MixTemp
-all succeed; only the write fails) needs a genuine write failure, which
-isn't reachable through normal UI input alone. It was verified once, live,
-by temporarily adding an environment-variable-gated fault injection
-(`DEMO_FORCE_WITHDRAW_FAILURE=1`) to `ExecuteRmBalWithdraw`, running the
-same RM001/1/1 happy-path input against it, and reverting the change
-immediately after (`git diff` showed zero changes once reverted - it never
-shipped). The API log confirmed the RM_BAL, Feeddoor, and MixTemp lookups
-all succeeded before the simulated write failure, isolating the exact code
-path:
+### Scenario 7 - DB write fails during withdrawal
 
-![DB write fail warning](screenshots/08-autofeed-dbwrite-fail-warning.png)
-![Dialog still open](screenshots/08b-autofeed-dialog-still-open.png)
+RM_BAL/Feeddoor/MixTemp all succeed; only the write fails. This needs a
+genuine write failure, which isn't reachable through normal UI input alone.
+It was verified once, live, by temporarily adding an environment-variable-
+gated fault injection (`DEMO_FORCE_WITHDRAW_FAILURE=1`) to
+`ExecuteRmBalWithdraw`, running the same RM001/1/1 happy-path input against
+it, and reverting the change immediately after (`git diff` showed zero
+changes once reverted - it never shipped). The API log confirmed the
+RM_BAL, Feeddoor, and MixTemp lookups all succeeded before the simulated
+write failure, isolating the exact code path: the warning appeared
+("เขียนฐานข้อมูลไม่สำเร็จระหว่าง auto-feed") and the dialog stayed open,
+requiring a manual close.
 
 This is the same catch-and-warn branch `Presenter_ShowAutoFeedTests
 .DbWriteFailsDuringAutoFeed_ShowsWarning_DoesNotCloseDialog` already covers
-with a mocked `IApiClient` - this run just proves it also holds with a real
+with a mocked `IApiClient` - this run just proved it also holds with a real
 HTTP round trip and a real (if artificially triggered) server-side failure.
-
-## 5. Screenshots
-
-This walkthrough was run for real on Windows against the live API, driven
-via UI Automation instead of by hand - each step below is an actual
-screenshot, not a mockup.
-
-![Login](screenshots/01-login.png)
-
-![Kanban loaded](screenshots/02-kanban-loaded.png)
-
-![Weight entered](screenshots/03-weight-entered.png)
-
-![Save confirmation](screenshots/04-save-confirmation.png)
-
-Running this walkthrough for real caught two bugs that no unit test had
-caught (both fixed, both now covered by regression tests) - see
-[`RETROSPECTIVE.md`](RETROSPECTIVE.md) for details:
-
-1. `Program.cs` only resolved `IView_TotalWeight` from the container, never
-   `IPresenter_TotalWeight` - so the presenter (and its event subscriptions)
-   was never constructed, and the barcode/save/accept actions silently did
-   nothing.
-2. `ShowMessage`'s icon mapping only special-cased `Error`, so `Information`
-   messages showed a warning triangle instead of the info icon.
