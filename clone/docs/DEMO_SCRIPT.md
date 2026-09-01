@@ -84,6 +84,25 @@ dotnet test tests/Innovation.TotalWeight_PLC.Tests/Innovation.TotalWeight_PLC.Te
 This is the direct fix for the original `NotFound()` bug (Frontend ROADMAP
 §5b.2), which conflated "report a problem" with "close the form."
 
+**Scenario 7 - DB write fails during withdrawal** (RM_BAL/Feeddoor/MixTemp
+all succeed; only the write fails) needs a genuine write failure, which
+isn't reachable through normal UI input alone. It was verified once, live,
+by temporarily adding an environment-variable-gated fault injection
+(`DEMO_FORCE_WITHDRAW_FAILURE=1`) to `ExecuteRmBalWithdraw`, running the
+same RM001/1/1 happy-path input against it, and reverting the change
+immediately after (`git diff` showed zero changes once reverted - it never
+shipped). The API log confirmed the RM_BAL, Feeddoor, and MixTemp lookups
+all succeeded before the simulated write failure, isolating the exact code
+path:
+
+![DB write fail warning](screenshots/08-autofeed-dbwrite-fail-warning.png)
+![Dialog still open](screenshots/08b-autofeed-dialog-still-open.png)
+
+This is the same catch-and-warn branch `Presenter_ShowAutoFeedTests
+.DbWriteFailsDuringAutoFeed_ShowsWarning_DoesNotCloseDialog` already covers
+with a mocked `IApiClient` - this run just proves it also holds with a real
+HTTP round trip and a real (if artificially triggered) server-side failure.
+
 ## 5. Screenshots
 
 This walkthrough was run for real on Windows against the live API, driven
