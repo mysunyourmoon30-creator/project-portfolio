@@ -20,6 +20,7 @@
   <Folder Name="/tests/">
     <Project Path="tests/Innovation.Api.Tests/Innovation.Api.Tests.csproj" />
     <Project Path="tests/Innovation.Core.Tests/Innovation.Core.Tests.csproj" />
+    <Project Path="tests/Innovation.E2E.Tests/Innovation.E2E.Tests.csproj" />
     <Project Path="tests/Innovation.Hardware.Tests/Innovation.Hardware.Tests.csproj" />
     <Project Path="tests/Innovation.Mvp.Core.Tests/Innovation.Mvp.Core.Tests.csproj" />
     <Project Path="tests/Innovation.Repositories.Tests/Innovation.Repositories.Tests.csproj" />

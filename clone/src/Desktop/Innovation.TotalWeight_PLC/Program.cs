@@ -19,6 +19,7 @@ internal static class Program
     private static void Main()
     {
         ApplicationConfiguration.Initialize();
+        RegisterActivityListener();
 
         ServiceProvider = BuildServiceProvider();
 
@@ -39,11 +40,21 @@ internal static class Program
         Application.Run(mainForm);
     }
 
+    private static void RegisterActivityListener()
+    {
+        System.Diagnostics.ActivitySource.AddActivityListener(new System.Diagnostics.ActivityListener
+        {
+            ShouldListenTo = source => source.Name == "Innovation.TotalWeight_PLC",
+            Sample = (ref System.Diagnostics.ActivityCreationOptions<System.Diagnostics.ActivityContext> _) =>
+                System.Diagnostics.ActivitySamplingResult.AllData,
+        });
+    }
+
     private static IServiceProvider BuildServiceProvider()
     {
         var services = new ServiceCollection();
 
-        services.AddSingleton<IOperationTracer, NullOperationTracer>();
+        services.AddSingleton<IOperationTracer, OperationTracer>();
         services.AddSingleton<IAsyncOperationRunner, AsyncOperationRunner>();
         services.AddSingleton<INavigationService, NavigationService>();
 
