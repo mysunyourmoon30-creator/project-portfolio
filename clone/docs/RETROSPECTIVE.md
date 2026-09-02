@@ -118,6 +118,49 @@ the exact same demo script a second time end to end rather than assuming
 correct the value before saving, so the gap never surfaced until a
 verification pass tried the "reject then save without fixing it" path.
 
+## A fifth bug: the Accepted checkbox could be ticked directly, lying about server state
+
+Following up on the previous entry's own suggestion ("audit `Accepted` for
+the same class of bug"), the next demo-script run tried exactly that:
+clicking the `Accepted` checkbox directly in the grid, without ever pressing
+the **ยืนยัน (Accept) [F2]** button. It flipped to checked immediately - no
+API call, nothing in the API log. `AutoGenerateColumns` makes every column
+editable by default, and `gridSteps_CellEndEdit` only reacts to the
+`Actual` column, so a direct checkbox click silently updates the bound
+`StepRowViewModel.Accepted` with no code involved and no guard against it -
+the UI would show a step as accepted when the server had never processed
+an Accept for it.
+
+First fix attempt: mark just the `Accepted` column `ReadOnly = true` (via
+`DataBindingComplete`, since `AutoGenerateColumns` builds the column
+lazily). Verified live - `TogglePattern.Toggle()` against the checkbox left
+its state unchanged, while the real **ยืนยัน (Accept) [F2]** button still
+worked correctly through the legitimate path.
+
+That fix's own write-up ended with "audit the other columns too - `Target`,
+`Min`, `Max`, `StepNo`, `RawMaterialCode` are `{ get; init; }`, so they're
+probably already safe." Checking that assumption immediately, live, proved
+it **wrong**: setting the `Target` cell through the grid changed it from
+`10.0` to `999` without error. `init` is a C#-**compiler**-only
+restriction - the compiled setter is an ordinary method with no runtime
+guard, and `DataGridView`'s editing goes through
+`PropertyDescriptor.SetValue`, which is reflection-based and never sees the
+compiler's restriction at all. Every `{ get; init; }` property on
+`StepRowViewModel` was just as writable through the grid as `Accepted` had
+been.
+
+Real fix: lock every column read-only **except** `Actual` (the one field
+the operator is actually meant to type into), in the same
+`DataBindingComplete` handler. Re-verified live: `Target` now throws "Value
+is read-only" on an attempted overwrite, `Accepted` still can't be ticked
+directly, and `Actual` remains editable and still drives Save/Accept
+correctly end to end.
+
+**Lesson, reinforced a third time:** a retrospective's speculative "probably
+safe because X" is a claim, not a fact, until it's actually tested - and
+testing it immediately (rather than filing it as a someday-todo) is what
+turned a plausible guess into a real, wider fix within the same session.
+
 ## What I'd do differently with more time
 
 - Build the WinForms designer surfaces properly (this clone hand-writes
@@ -127,7 +170,8 @@ verification pass tried the "reject then save without fixing it" path.
   the representative subset + schema-smoke-test approach `RepositoryImplTests`
   takes, if the goal shifts from "demonstrate the pattern" to "guarantee
   every table's mapping."
-- Audit every other `DataGridView`-bound field for the same "grid commits
-  before the handler runs" assumption - `Accepted` is a checkbox column
-  bound the same way and was never stress-tested with a rejected/reverted
-  value the way `Actual` was here.
+- Add a presenter-level (not just grid-level) guard against writing to
+  anything but `Actual`, so the read-only column list isn't the only thing
+  standing between an operator and corrupting server-derived data - the
+  current fix protects the happy path but relies entirely on the WinForms
+  grid configuration being right.

@@ -18,6 +18,28 @@ public partial class frmTotalWeight : Form, IView_TotalWeight
     {
         InitializeComponent();
         gridSteps.DataSource = _steps;
+
+        // AutoGenerateColumns makes every column editable by default. A
+        // real run of the demo script found an operator could tick the
+        // Accepted checkbox directly in the grid - no API call, nothing in
+        // the server log, just a UI silently lying about whether the step
+        // was actually accepted. The obvious next question - "does {get;
+        // init;} on StepRowViewModel's other properties protect them the
+        // same way?" - turned out to be NO: DataGridView edits go through
+        // PropertyDescriptor.SetValue (reflection), which happily calls an
+        // init accessor's underlying setter method at runtime - `init` is
+        // a C#-compiler-only restriction, not a CLR one. A live test
+        // overwrote the Target column from 10.0 to 999 through the grid
+        // despite it being `init`-only. So: every column is locked down
+        // except Actual, the one field the operator is actually meant to
+        // type into.
+        gridSteps.DataBindingComplete += (_, _) =>
+        {
+            foreach (DataGridViewColumn column in gridSteps.Columns)
+            {
+                column.ReadOnly = column.Name != nameof(StepRowViewModel.Actual);
+            }
+        };
     }
 
     public string Barcode
