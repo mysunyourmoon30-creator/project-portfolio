@@ -185,6 +185,43 @@ have made it untestable dead weight, the same category of problem as the
 original system's own dead `IGenericRepository<T>` registration (Backend
 ROADMAP §4.1) that this clone otherwise takes care not to reproduce.
 
+## A sixth bug: a PLC failure reported itself as a database failure
+
+A full re-run of all 7 `RUNTIME_TEST_CHECKLIST.md` auto-feed scenarios (not
+just the four covered by the demo script) drove Scenario 3 - PLC unreachable
+- live, via a temporary `SimulatedPlcDevice(new PlcSimulationScript
+{ FailToConnect = true })` swap in `Program.cs`. The dialog correctly stayed
+open, but the warning read "เขียนฐานข้อมูลไม่สำเร็จระหว่าง auto-feed"
+(database write failed) - the wrong message. `Presenter_ShowAutoFeed`'s only
+catch clause around the withdraw/PLC-open/PLC-write block was `catch
+(Exception ex) when (ex is not RmBalNotFoundException and not
+SettingNotFoundException)`, which reports every remaining failure - PLC
+connection loss, PLC timeout, or a genuine database error - as a database
+error. `Presenter_ShowAutoFeedTests` never caught this because its PLC
+failure test only asserts the dialog stays open, not which message it shows.
+
+Fixed by adding a more specific `catch (Exception ex) when (ex is
+PlcConnectionException or PlcTimeoutException)` clause before the generic
+one, showing a new `Resources.Strings.PlcUnreachable`
+("ติดต่อ PLC ไม่ได้ กรุณาตรวจสอบการเชื่อมต่อ") message; the generic clause
+still handles everything else, including the DB-write-failure scenario.
+Re-verified live: with `FailToConnect = true`, the dialog now shows the PLC
+message and stays open; after reverting `Program.cs` back to a working
+simulated PLC, the same RM001/1/1 input succeeds and auto-closes, MixTemp
+still-missing-is-not-an-error still falls through to success, and a
+withdrawal failure (re-verified via the same temporary
+`DEMO_FORCE_WITHDRAW_FAILURE`-style env-gated fault injection as before,
+this time in `ExecuteRmBalWithdraw`, reverted immediately after and
+confirmed via `git diff`) still correctly shows the *generic* DB-write-failed
+message rather than being mis-caught by the new PLC-specific clause.
+
+**Lesson, reinforced a fourth time:** "the dialog didn't close" is not the
+same test as "the dialog shows the right reason it didn't close" - a
+catch-all exception filter that only distinguishes "known non-error" from
+"everything else" will silently misattribute failures to the wrong subsystem
+the moment a second real failure mode (PLC, here) shares that catch-all with
+the one it was originally written for (the database).
+
 ## What I'd do differently with more time
 
 - Build the WinForms designer surfaces properly (this clone hand-writes

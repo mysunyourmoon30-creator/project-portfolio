@@ -75,12 +75,16 @@ ID fields and a button - use it to drive `Presenter_ShowAutoFeed` directly:
 | any unknown value, e.g. `NOPE` | `1` | `1` | Warning "ไม่พบบาร์โค้ด...ใน RM_BAL" - **dialog stays open**, click ปิด [Esc] to dismiss |
 | `RM001` | `999` (unconfigured) | `1` | Warning "ไม่ได้ตั้งค่า Feeddoor Step..." - **dialog stays open** |
 | `RM001` | `1` | `999` (no MixTemp row) | **Not an error** - proceeds to success and closes itself, same as the happy path |
+| `RM001` | `1` | `1`, with PLC unreachable | Warning "ติดต่อ PLC ไม่ได้ กรุณาตรวจสอบการเชื่อมต่อ" - **dialog stays open** |
 
-Every one of these four was run for real against the live API, not just
+Every one of these five was run for real against the live API, not just
 asserted in a unit test - each failure case left the dialog genuinely open
 (confirmed via its window handle still existing) with the "ปิด [Esc]" button
 available, and the API log confirmed which lookup failed in each case. The
-same four scenarios are also covered by `Presenter_ShowAutoFeedTests` and
+PLC-unreachable row required a temporary `Program.cs` swap to a
+`SimulatedPlcDevice` configured to fail connecting, reverted immediately
+after (`git diff` showed zero changes once reverted). The same scenarios are
+also covered by `Presenter_ShowAutoFeedTests` and
 `Innovation.Hardware.Tests` if you'd rather run them headlessly:
 
 ```bash

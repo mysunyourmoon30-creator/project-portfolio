@@ -59,6 +59,18 @@ public sealed class Presenter_ShowAutoFeed : IPresenter_ShowAutoFeed
             await _plc.OpenAsync();
             await _plc.WriteDeviceAsync(feeddoorStep.PlcAddress, 1);
         }
+        catch (Exception ex) when (ex is PlcConnectionException or PlcTimeoutException)
+        {
+            // A live run of the demo script found this branch was falling
+            // through to the generic "DB write failed" message below even
+            // when the real cause was the PLC, not the database - a
+            // misleading message for whoever has to act on it. PLC
+            // connection/timeout failures (RUNTIME_TEST_CHECKLIST scenario
+            // "PLC ต่อไม่ติด / timeout") get their own message; everything
+            // else in this block still falls through as a DB write failure.
+            View.ShowMessage(Resources.Strings.PlcUnreachable, AppMessageType.Warning);
+            return; // form must stay open
+        }
         catch (Exception ex) when (ex is not RmBalNotFoundException and not SettingNotFoundException)
         {
             View.ShowMessage(Resources.Strings.AutoFeedDbWriteFailed, AppMessageType.Warning);

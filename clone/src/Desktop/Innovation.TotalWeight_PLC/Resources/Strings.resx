@@ -34,6 +34,7 @@
   <data name="RmBalNotFound" xml:space="preserve"><value>ไม่พบบาร์โค้ด {0} ใน RM_BAL</value></data>
   <data name="FeeddoorStepNotConfigured" xml:space="preserve"><value>ไม่ได้ตั้งค่า Feeddoor Step สำหรับไลน์นี้ - ข้ามการเปิดประตูป้อน</value></data>
   <data name="AutoFeedDbWriteFailed" xml:space="preserve"><value>เขียนฐานข้อมูลไม่สำเร็จระหว่าง auto-feed</value></data>
+  <data name="PlcUnreachable" xml:space="preserve"><value>ติดต่อ PLC ไม่ได้ กรุณาตรวจสอบการเชื่อมต่อ</value></data>
   <data name="AutoFeedSuccess" xml:space="preserve"><value>ป้อนวัตถุดิบสำเร็จ</value></data>
   <data name="InvalidCredentials" xml:space="preserve"><value>ชื่อผู้ใช้หรือรหัสผ่านไม่ถูกต้อง</value></data>
   <data name="NoStepsWeighed" xml:space="preserve"><value>กรุณาชั่งน้ำหนักอย่างน้อยหนึ่งขั้นตอนก่อนบันทึก</value></data>

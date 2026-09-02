@@ -80,7 +80,45 @@ public class Presenter_ShowAutoFeedTests
 
         await presenter.RunAsync(new AutoFeedRequest("RM001", 1, 1));
 
-        view.Received(1).ShowMessage(Arg.Any<string>(), AppMessageType.Warning);
+        // Must be the generic DB-write-failed message, NOT the PLC-specific
+        // one below - a live run once found these two conflated.
+        view.Received(1).ShowMessage(Resources.Strings.AutoFeedDbWriteFailed, AppMessageType.Warning);
+        view.DidNotReceive().CloseDialog(Arg.Any<DialogResult>());
+    }
+
+    // A live run of the demo script found that a PLC connection/timeout
+    // failure was falling into the same catch as a database failure and
+    // showing the misleading "database write failed" message. This test
+    // locks in the fix: the PLC gets its own message.
+    [Fact]
+    public async Task PlcUnreachable_ShowsPlcSpecificWarning_DoesNotCloseDialog()
+    {
+        var (view, api, plc, presenter) = Build();
+        api.GetRmBalAsync(Arg.Any<string>()).Returns(new RmBalDto("RM001", 100m));
+        api.GetFeeddoorStepAsync(Arg.Any<int>()).Returns(new FeeddoorStepDto(2, "D70", "Feeddoor Step"));
+        api.GetMixTempAsync(Arg.Any<int>()).Returns((MixTempDto?)null);
+        plc.OpenAsync(Arg.Any<CancellationToken>())
+            .Returns(_ => throw new PlcConnectionException("PLC unreachable"));
+
+        await presenter.RunAsync(new AutoFeedRequest("RM001", 1, 1));
+
+        view.Received(1).ShowMessage(Resources.Strings.PlcUnreachable, AppMessageType.Warning);
+        view.DidNotReceive().CloseDialog(Arg.Any<DialogResult>());
+    }
+
+    [Fact]
+    public async Task PlcTimesOut_ShowsPlcSpecificWarning_DoesNotCloseDialog()
+    {
+        var (view, api, plc, presenter) = Build();
+        api.GetRmBalAsync(Arg.Any<string>()).Returns(new RmBalDto("RM001", 100m));
+        api.GetFeeddoorStepAsync(Arg.Any<int>()).Returns(new FeeddoorStepDto(2, "D70", "Feeddoor Step"));
+        api.GetMixTempAsync(Arg.Any<int>()).Returns((MixTempDto?)null);
+        plc.WriteDeviceAsync(Arg.Any<string>(), Arg.Any<int>(), Arg.Any<CancellationToken>())
+            .Returns(_ => throw new PlcTimeoutException("PLC timed out"));
+
+        await presenter.RunAsync(new AutoFeedRequest("RM001", 1, 1));
+
+        view.Received(1).ShowMessage(Resources.Strings.PlcUnreachable, AppMessageType.Warning);
         view.DidNotReceive().CloseDialog(Arg.Any<DialogResult>());
     }
 }

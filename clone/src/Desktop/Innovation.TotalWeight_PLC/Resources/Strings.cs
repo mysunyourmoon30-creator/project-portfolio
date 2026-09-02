@@ -26,6 +26,7 @@ public static class Strings
     public static string RmBalNotFound(string barcode) => Get(nameof(RmBalNotFound), barcode);
     public static string FeeddoorStepNotConfigured => Get(nameof(FeeddoorStepNotConfigured));
     public static string AutoFeedDbWriteFailed => Get(nameof(AutoFeedDbWriteFailed));
+    public static string PlcUnreachable => Get(nameof(PlcUnreachable));
     public static string AutoFeedSuccess => Get(nameof(AutoFeedSuccess));
     public static string InvalidCredentials => Get(nameof(InvalidCredentials));
     public static string NoStepsWeighed => Get(nameof(NoStepsWeighed));
