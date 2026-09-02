@@ -222,6 +222,50 @@ catch-all exception filter that only distinguishes "known non-error" from
 the moment a second real failure mode (PLC, here) shares that catch-all with
 the one it was originally written for (the database).
 
+## UI/UX modernization pass - a rendering gap screenshots caught, measurement didn't
+
+All 4 WinForms screens were restyled to a flat blue/white theme (new
+`Infrastructure/UiTheme.cs`), purely visual - no Presenter, DI, hotkey, or
+grid column-lock logic touched. Two real rendering issues only surfaced by
+screenshotting the actual running app, not by reasoning about the code:
+
+1. **Button text silently clipped.** `Graphics.MeasureString` (GDI+) said
+   `"เข้าสู่ระบบ [Enter]"` needs 108px; the button was sized to 120px - a
+   12px margin that looked safe on paper. The live screenshot showed only
+   `"เข้าสู่ระบบ"` rendered - the `[Enter]` hotkey hint was completely gone,
+   with no ellipsis or visual warning. `Button` renders via `TextRenderer`
+   (GDI), which measures Thai + Latin bracket text differently than GDI+'s
+   `MeasureString` - the two don't agree closely enough to trust for a
+   factory UI where the bracket hint is the only clue a gloved operator gets
+   that a button has a keyboard shortcut. Fixed by widening every button
+   well past its GDI+-measured width (roughly +50-70px safety margin,
+   confirmed empirically per string, not derived from a formula) and
+   re-screenshotting each one to confirm the full hint text - "ยืนยัน
+   (Accept) [F2]" on `frmTotalWeight` needed the same fix a second time
+   after the first round only fixed the login form.
+2. **`DataGridViewAutoSizeColumnsMode.Fill` didn't take on first paint.**
+   Set once in `UiTheme.StyleGrid` before `AutoGenerateColumns` builds the
+   columns, the grid's columns stayed at their narrow default
+   auto-generated widths - `RawMaterialCode`'s header rendered as
+   `"RawMaterialC"`, cut off mid-word, with no scrollbar or other visual
+   cue that anything was wrong. UI Automation's own `BoundingRectangle`
+   query even reported the columns as already evenly filled (123px each),
+   directly contradicting the screenshot - a reminder that an
+   accessibility-tree query is not a substitute for looking at the actual
+   pixels. Fixed by setting explicit per-column `FillWeight` values in a
+   second, independent `DataBindingComplete` subscriber (added, not
+   merging into the existing read-only-lock handler, to keep that
+   protected logic untouched) once the auto-generated columns actually
+   exist.
+
+**Lesson, reinforced a fifth time:** for anything involving rendered text or
+computed layout, a screenshot of the real running control is ground truth;
+neither a measurement API nor an accessibility-tree query can be trusted to
+match what actually painted to the screen. Both bugs here were invisible to
+`dotnet build`, invisible to the 83-test suite (none of them assert on pixel
+layout), and invisible to reading the source - only a rendered screenshot,
+looked at directly, caught them.
+
 ## What I'd do differently with more time
 
 - Build the WinForms designer surfaces properly (this clone hand-writes

@@ -1,3 +1,4 @@
+using Innovation.TotalWeight_PLC.Infrastructure;
 using Innovation.TotalWeight_PLC.Interfaces.Presenters;
 using Innovation.TotalWeight_PLC.Interfaces.Views;
 using Innovation.TotalWeight_PLC.ViewModel;
@@ -9,6 +10,10 @@ public partial class frmSelectKB : Form, IView_SelectKB
     public frmSelectKB()
     {
         InitializeComponent();
+        UiTheme.ApplyForm(this);
+        UiTheme.StyleGrid(gridKanbans);
+        UiTheme.StyleButton(btnOk, UiTheme.ButtonKind.Primary);
+        UiTheme.StyleButton(btnCancel, UiTheme.ButtonKind.Secondary);
     }
 
     public List<KanbanSummary> AvailableKanbans

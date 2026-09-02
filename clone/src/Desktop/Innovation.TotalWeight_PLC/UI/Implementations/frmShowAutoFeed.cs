@@ -1,3 +1,4 @@
+using Innovation.TotalWeight_PLC.Infrastructure;
 using Innovation.TotalWeight_PLC.Interfaces.Views;
 
 namespace Innovation.TotalWeight_PLC.UI.Implementations;
@@ -7,6 +8,8 @@ public partial class frmShowAutoFeed : Form, IView_ShowAutoFeed
     public frmShowAutoFeed()
     {
         InitializeComponent();
+        UiTheme.ApplyForm(this);
+        UiTheme.StyleButton(btnClose, UiTheme.ButtonKind.Secondary);
     }
 
     public void Run() => ShowDialog();

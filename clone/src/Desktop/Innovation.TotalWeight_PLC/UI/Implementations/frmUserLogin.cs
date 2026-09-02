@@ -1,3 +1,4 @@
+using Innovation.TotalWeight_PLC.Infrastructure;
 using Innovation.TotalWeight_PLC.Interfaces.Views;
 
 namespace Innovation.TotalWeight_PLC.UI.Implementations;
@@ -7,6 +8,11 @@ public partial class frmUserLogin : Form, IView_UserLogin
     public frmUserLogin()
     {
         InitializeComponent();
+        UiTheme.ApplyForm(this);
+        UiTheme.StyleTextBox(txtUsername);
+        UiTheme.StyleTextBox(txtPassword);
+        UiTheme.StyleButton(btnLogin, UiTheme.ButtonKind.Primary);
+        UiTheme.StyleButton(btnCancel, UiTheme.ButtonKind.Secondary);
     }
 
     public string Username

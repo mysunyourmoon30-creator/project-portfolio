@@ -1,4 +1,5 @@
 using System.ComponentModel;
+using Innovation.TotalWeight_PLC.Infrastructure;
 using Innovation.TotalWeight_PLC.Interfaces.Views;
 using Innovation.TotalWeight_PLC.ViewModel;
 
@@ -17,6 +18,38 @@ public partial class frmTotalWeight : Form, IView_TotalWeight
     public frmTotalWeight()
     {
         InitializeComponent();
+
+        UiTheme.ApplyForm(this);
+        UiTheme.StyleTextBox(txtBarcode);
+        UiTheme.StyleGrid(gridSteps);
+        UiTheme.StyleButton(btnSelectKanban, UiTheme.ButtonKind.Secondary);
+        UiTheme.StyleButton(btnSave, UiTheme.ButtonKind.Primary);
+        UiTheme.StyleButton(btnAccept, UiTheme.ButtonKind.Success);
+        UiTheme.StyleButton(btnAutoFeed, UiTheme.ButtonKind.Secondary);
+        UiTheme.StyleTextBox(txtAutoFeedBarcode);
+        UiTheme.StyleTextBox(txtAutoFeedLineId);
+        UiTheme.StyleTextBox(txtAutoFeedPlanId);
+        grpAutoFeed.ForeColor = UiTheme.TextSecondary;
+
+        // Fill mode alone left the auto-generated columns at their default
+        // AutoGenerateColumns widths on first paint (no resize event to
+        // trigger recalculation) - explicit FillWeights, applied once the
+        // columns exist, is what actually makes "RawMaterialCode" render
+        // without clipping instead of relying on Fill's own initial layout.
+        gridSteps.DataBindingComplete += (_, _) =>
+        {
+            foreach (DataGridViewColumn column in gridSteps.Columns)
+            {
+                column.FillWeight = column.Name switch
+                {
+                    nameof(StepRowViewModel.StepNo) => 70,
+                    nameof(StepRowViewModel.RawMaterialCode) => 150,
+                    nameof(StepRowViewModel.Accepted) => 90,
+                    _ => 100,
+                };
+            }
+        };
+
         gridSteps.DataSource = _steps;
 
         // AutoGenerateColumns makes every column editable by default. A

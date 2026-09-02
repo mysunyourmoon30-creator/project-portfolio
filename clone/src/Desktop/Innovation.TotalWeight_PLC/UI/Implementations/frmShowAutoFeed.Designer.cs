@@ -22,8 +22,9 @@ partial class frmShowAutoFeed
         btnClose = new Button();
 
         lblStatus.Text = "กำลังป้อนวัตถุดิบอัตโนมัติ...";
-        lblStatus.Location = new Point(20, 20);
+        lblStatus.Location = new Point(24, 30);
         lblStatus.AutoSize = true;
+        lblStatus.Font = new Font("Segoe UI", 10f, FontStyle.Regular);
 
         // Only needed for the failure paths - success closes the dialog
         // itself via CloseDialog(). Without this button, a failed auto-feed
@@ -31,14 +32,18 @@ partial class frmShowAutoFeed
         // all, which is its own kind of bug even though "must stay open"
         // is the correct behavior on failure.
         btnClose.Text = "ปิด [Esc]";
-        btnClose.Location = new Point(20, 55);
+        btnClose.Location = new Point(24, 96);
+        btnClose.Size = new Size(110, 36);
         btnClose.Click += (_, _) => CloseDialog(DialogResult.Cancel);
 
         AutoScaleMode = AutoScaleMode.Font;
-        ClientSize = new Size(320, 100);
+        ClientSize = new Size(360, 150);
         Controls.Add(lblStatus);
         Controls.Add(btnClose);
         CancelButton = btnClose;
+        FormBorderStyle = FormBorderStyle.FixedDialog;
+        MaximizeBox = false;
+        MinimizeBox = false;
         StartPosition = FormStartPosition.CenterScreen;
         Text = "ป้อนวัตถุดิบอัตโนมัติ";
     }

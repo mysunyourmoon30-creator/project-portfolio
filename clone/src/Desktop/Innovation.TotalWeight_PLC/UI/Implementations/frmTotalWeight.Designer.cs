@@ -46,11 +46,12 @@ partial class frmTotalWeight
         btnSelectKanban = new Button();
 
         lblBarcode.Text = "ยิงบาร์โค้ดคัมบัง";
-        lblBarcode.Location = new Point(10, 12);
+        lblBarcode.Location = new Point(20, 24);
         lblBarcode.AutoSize = true;
 
-        txtBarcode.Location = new Point(140, 9);
-        txtBarcode.Width = 220;
+        txtBarcode.Location = new Point(140, 18);
+        txtBarcode.Size = new Size(360, 28);
+        txtBarcode.Anchor = AnchorStyles.Top | AnchorStyles.Left;
         txtBarcode.KeyDown += txtBarcode_KeyDown;
 
         // Opens Presenter_SelectKB via IPresenter_TotalWeight.SelectKanbanAsync -
@@ -58,21 +59,28 @@ partial class frmTotalWeight
         // pending work, not just a direct barcode scan; this exposes that
         // path too so it isn't dead code that's only ever exercised by tests.
         btnSelectKanban.Text = "เลือกคัมบัง...";
-        btnSelectKanban.Location = new Point(370, 8);
+        btnSelectKanban.Location = new Point(730, 15);
+        btnSelectKanban.Size = new Size(150, 32);
+        btnSelectKanban.Anchor = AnchorStyles.Top | AnchorStyles.Right;
         btnSelectKanban.Click += btnSelectKanban_Click;
 
-        gridSteps.Location = new Point(10, 45);
-        gridSteps.Size = new Size(700, 220);
+        gridSteps.Location = new Point(20, 60);
+        gridSteps.Size = new Size(860, 394);
+        gridSteps.Anchor = AnchorStyles.Top | AnchorStyles.Bottom | AnchorStyles.Left | AnchorStyles.Right;
         gridSteps.AutoGenerateColumns = true;
         gridSteps.AllowUserToAddRows = false;
         gridSteps.CellEndEdit += gridSteps_CellEndEdit;
 
         btnSave.Text = "บันทึก [F5]";
-        btnSave.Location = new Point(460, 275);
+        btnSave.Location = new Point(550, 464);
+        btnSave.Size = new Size(130, 36);
+        btnSave.Anchor = AnchorStyles.Bottom | AnchorStyles.Right;
         btnSave.Click += btnSave_Click;
 
         btnAccept.Text = "ยืนยัน (Accept) [F2]";
-        btnAccept.Location = new Point(570, 275);
+        btnAccept.Location = new Point(690, 464);
+        btnAccept.Size = new Size(190, 36);
+        btnAccept.Anchor = AnchorStyles.Bottom | AnchorStyles.Right;
         btnAccept.Click += btnAccept_Click;
 
         // Demo trigger for the auto-feed flow (Presenter_ShowAutoFeed) -
@@ -80,32 +88,35 @@ partial class frmTotalWeight
         // weighing; this clone exposes it directly so the "must not close
         // the form on failure" behavior can be walked through by hand.
         grpAutoFeed.Text = "ทดสอบ Auto-feed";
-        grpAutoFeed.Location = new Point(10, 310);
-        grpAutoFeed.Size = new Size(700, 80);
+        grpAutoFeed.Location = new Point(20, 510);
+        grpAutoFeed.Size = new Size(860, 90);
+        grpAutoFeed.Anchor = AnchorStyles.Bottom | AnchorStyles.Left | AnchorStyles.Right;
 
         lblAutoFeedBarcode.Text = "บาร์โค้ด";
-        lblAutoFeedBarcode.Location = new Point(10, 25);
+        lblAutoFeedBarcode.Location = new Point(15, 34);
         lblAutoFeedBarcode.AutoSize = true;
         txtAutoFeedBarcode.Text = "RM001";
-        txtAutoFeedBarcode.Location = new Point(70, 22);
-        txtAutoFeedBarcode.Width = 100;
+        txtAutoFeedBarcode.Location = new Point(80, 30);
+        txtAutoFeedBarcode.Size = new Size(110, 26);
 
         lblAutoFeedLineId.Text = "Line ID";
-        lblAutoFeedLineId.Location = new Point(190, 25);
+        lblAutoFeedLineId.Location = new Point(210, 34);
         lblAutoFeedLineId.AutoSize = true;
         txtAutoFeedLineId.Text = "1";
-        txtAutoFeedLineId.Location = new Point(250, 22);
-        txtAutoFeedLineId.Width = 50;
+        txtAutoFeedLineId.Location = new Point(270, 30);
+        txtAutoFeedLineId.Size = new Size(60, 26);
 
         lblAutoFeedPlanId.Text = "Plan ID";
-        lblAutoFeedPlanId.Location = new Point(320, 25);
+        lblAutoFeedPlanId.Location = new Point(350, 34);
         lblAutoFeedPlanId.AutoSize = true;
         txtAutoFeedPlanId.Text = "1";
-        txtAutoFeedPlanId.Location = new Point(380, 22);
-        txtAutoFeedPlanId.Width = 50;
+        txtAutoFeedPlanId.Location = new Point(410, 30);
+        txtAutoFeedPlanId.Size = new Size(60, 26);
 
         btnAutoFeed.Text = "ป้อนวัตถุดิบอัตโนมัติ";
-        btnAutoFeed.Location = new Point(460, 20);
+        btnAutoFeed.Location = new Point(660, 27);
+        btnAutoFeed.Size = new Size(180, 34);
+        btnAutoFeed.Anchor = AnchorStyles.Top | AnchorStyles.Right;
         btnAutoFeed.Click += btnAutoFeed_Click;
 
         grpAutoFeed.Controls.Add(lblAutoFeedBarcode);
@@ -117,7 +128,8 @@ partial class frmTotalWeight
         grpAutoFeed.Controls.Add(btnAutoFeed);
 
         AutoScaleMode = AutoScaleMode.Font;
-        ClientSize = new Size(730, 400);
+        ClientSize = new Size(900, 620);
+        MinimumSize = new Size(760, 500);
         Controls.Add(lblBarcode);
         Controls.Add(txtBarcode);
         Controls.Add(btnSelectKanban);
