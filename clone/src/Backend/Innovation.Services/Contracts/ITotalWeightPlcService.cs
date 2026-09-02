@@ -8,6 +8,7 @@ public interface ITotalWeightPlcService
     // T1
     LoginResultDto Login(LoginRequestDto request);
     KanbanDetailDto GetKanban(string barcode);
+    List<KanbanSummaryDto> GetPendingKanbans();
     SaveTotalWeightResultDto SaveTotalWeight(SaveTotalWeightRequestDto request);
     void Accept(AcceptStepRequestDto request);
     bool TotalWeightExists(int kbTogetherId);

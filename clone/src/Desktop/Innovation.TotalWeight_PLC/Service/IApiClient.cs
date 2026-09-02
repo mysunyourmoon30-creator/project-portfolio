@@ -12,6 +12,7 @@ public interface IApiClient
 {
     Task<LoginResultAndToken> LoginAsync(string username, string password, CancellationToken ct = default);
     Task<KanbanDetailDto> GetKanbanAsync(string barcode, CancellationToken ct = default);
+    Task<List<KanbanSummaryDto>> GetPendingKanbansAsync(CancellationToken ct = default);
     Task<SaveTotalWeightResultDto> SaveTotalWeightAsync(SaveTotalWeightRequestDto request, CancellationToken ct = default);
     Task AcceptAsync(AcceptStepRequestDto request, CancellationToken ct = default);
     Task<RmBalDto> GetRmBalAsync(string barcode, CancellationToken ct = default);

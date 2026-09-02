@@ -41,6 +41,8 @@ public sealed class Presenter_TotalWeight : IPresenter_TotalWeight
             _ = _asyncRunner.RunAsync(nameof(View.AcceptRequested), () => AcceptStepAsync(stepNo));
         View.AutoFeedRequested += (_, e) =>
             _ = _asyncRunner.RunAsync(nameof(View.AutoFeedRequested), () => RunAutoFeedAsync(e.Request));
+        View.SelectKanbanRequested += (_, _) =>
+            _ = _asyncRunner.RunAsync(nameof(View.SelectKanbanRequested), SelectKanbanAsync);
     }
 
     public void Run() => View.Run();
@@ -165,5 +167,28 @@ public sealed class Presenter_TotalWeight : IPresenter_TotalWeight
         autoFeedForm.Show();
         await autoFeedPresenter.RunAsync(request);
         await closedTcs.Task;
+    }
+
+    // Opens Presenter_SelectKB (an IDialogPresenter, synchronous by design -
+    // it just blocks on ShowDialog() internally, so no Show()/FormClosed
+    // dance is needed here the way RunAutoFeedAsync above needs one).
+    // Exercises the "controller passes typed request in, gets typed result
+    // out" fix directly (Frontend ROADMAP §5b.4) - nothing here writes to
+    // or reads from a public mutable view property.
+    public async Task SelectKanbanAsync()
+    {
+        var pending = await _api.GetPendingKanbansAsync();
+        var candidates = pending
+            .Select(k => new KanbanSummary(k.KbTogetherId, k.Barcode, k.Status))
+            .ToList();
+
+        using var scope = _scopeFactory.CreateScope();
+        var selectPresenter = scope.ServiceProvider.GetRequiredService<IPresenter_SelectKB>();
+        var result = selectPresenter.Run(new SelectKbRequest(candidates));
+
+        if (result.Selected is { } selected)
+        {
+            await LoadKanbanAsync(selected.Barcode);
+        }
     }
 }

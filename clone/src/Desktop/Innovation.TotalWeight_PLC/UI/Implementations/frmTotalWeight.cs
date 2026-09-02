@@ -57,6 +57,7 @@ public partial class frmTotalWeight : Form, IView_TotalWeight
     public event EventHandler? SaveRequested;
     public event EventHandler<int>? AcceptRequested;
     public event EventHandler<AutoFeedRequestedEventArgs>? AutoFeedRequested;
+    public event EventHandler? SelectKanbanRequested;
 
     public void Run() { } // main window - message loop started by Program.cs, not here
 
@@ -121,6 +122,8 @@ public partial class frmTotalWeight : Form, IView_TotalWeight
             AcceptRequested?.Invoke(this, row.StepNo);
         }
     }
+
+    private void btnSelectKanban_Click(object sender, EventArgs e) => SelectKanbanRequested?.Invoke(this, EventArgs.Empty);
 
     private void btnAutoFeed_Click(object sender, EventArgs e)
     {

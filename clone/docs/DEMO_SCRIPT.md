@@ -31,7 +31,15 @@ dotnet run
    - Username: `operator1`
    - Password: `Password123!`
 2. Click **เข้าสู่ระบบ [Enter]**. On success the main weighing screen opens.
-3. In **ยิงบาร์โค้ดคัมบัง**, type `KB0000001` and press **Enter**.
+   Entering a wrong password instead shows "ชื่อผู้ใช้หรือรหัสผ่านไม่ถูกต้อง"
+   and keeps the login dialog open - verified live against the real API's
+   401 response.
+3. Either type `KB0000001` into **ยิงบาร์โค้ดคัมบัง** and press **Enter**, or
+   click **เลือกคัมบัง...** to open a dialog listing every kanban with
+   `Status = "Pending"` (fetched live from `GET /api/kanbans`), pick
+   `KB0000001` from the grid, and click **ตกลง [F5]** - either path loads
+   the same kanban. Clicking **ยกเลิก [Esc]** in that dialog returns to the
+   main screen with nothing loaded, no API side effect.
    - The steps grid populates with one row: step 1, raw material `RM001`,
      target 10.00, range [9.50, 10.50].
 4. Click into the **Actual** cell of step 1, type `10.05`, and press Tab/Enter

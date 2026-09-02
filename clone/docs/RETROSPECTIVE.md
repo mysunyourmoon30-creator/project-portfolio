@@ -161,6 +161,30 @@ safe because X" is a claim, not a fact, until it's actually tested - and
 testing it immediately (rather than filing it as a someday-todo) is what
 turned a plausible guess into a real, wider fix within the same session.
 
+## Closing the loop: select-kanban had no way to open it
+
+`frmSelectKB`/`Presenter_SelectKB` were built in Phase 4 and covered by
+`Presenter_ShowAutoFeedTests`-style unit-test thinking, but nothing in the
+shipped UI ever actually opened that dialog - there was no button, and no
+API endpoint to list candidate kanbans for it to show. Asked to verify it
+live, the honest answer was "it's currently dead code." Closed the gap for
+real rather than working around it: added `GET /api/kanbans` (service
+method, controller action, and a matching `IApiClient` call), a
+"เลือกคัมบัง..." button on the main screen, and
+`Presenter_TotalWeight.SelectKanbanAsync` to wire the two together -
+fetch candidates, show the dialog in its own DI scope, and if something
+was picked, feed its barcode into the same `LoadKanbanAsync` the manual
+barcode-scan path already uses. Verified live end to end: the dialog opens
+showing the one seeded pending kanban, selecting it and clicking ตกลง loads
+it into the main grid, and clicking ยกเลิก returns cleanly with no API call
+and no crash.
+
+This wasn't a bug fix - the two-screen flow (login → main) worked fine
+without it - but leaving a fully-built screen with no way to reach it would
+have made it untestable dead weight, the same category of problem as the
+original system's own dead `IGenericRepository<T>` registration (Backend
+ROADMAP §4.1) that this clone otherwise takes care not to reproduce.
+
 ## What I'd do differently with more time
 
 - Build the WinForms designer surfaces properly (this clone hand-writes

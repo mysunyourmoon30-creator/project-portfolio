@@ -7,3 +7,8 @@ clone/data/*.db-*
 *.db
 *.db-shm
 *.db-wal
+
+# Visual Studio auto-generates a matching .sln next to a .csproj it opens
+# directly; the only real solution file is clone/TotalWeightPlc.slnx.
+clone/src/**/*.sln
+clone/tests/**/*.sln

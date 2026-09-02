@@ -31,4 +31,5 @@ public interface IView_TotalWeight : IViewBase, IView<IPresenter_TotalWeight>
     event EventHandler? SaveRequested;
     event EventHandler<int>? AcceptRequested;
     event EventHandler<AutoFeedRequestedEventArgs>? AutoFeedRequested;
+    event EventHandler? SelectKanbanRequested;
 }

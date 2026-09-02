@@ -16,6 +16,7 @@ partial class frmTotalWeight
     private Label lblAutoFeedPlanId;
     private TextBox txtAutoFeedPlanId;
     private Button btnAutoFeed;
+    private Button btnSelectKanban;
 
     protected override void Dispose(bool disposing)
     {
@@ -42,6 +43,7 @@ partial class frmTotalWeight
         lblAutoFeedPlanId = new Label();
         txtAutoFeedPlanId = new TextBox();
         btnAutoFeed = new Button();
+        btnSelectKanban = new Button();
 
         lblBarcode.Text = "ยิงบาร์โค้ดคัมบัง";
         lblBarcode.Location = new Point(10, 12);
@@ -50,6 +52,14 @@ partial class frmTotalWeight
         txtBarcode.Location = new Point(140, 9);
         txtBarcode.Width = 220;
         txtBarcode.KeyDown += txtBarcode_KeyDown;
+
+        // Opens Presenter_SelectKB via IPresenter_TotalWeight.SelectKanbanAsync -
+        // the original real system reaches kanban selection from a grid of
+        // pending work, not just a direct barcode scan; this exposes that
+        // path too so it isn't dead code that's only ever exercised by tests.
+        btnSelectKanban.Text = "เลือกคัมบัง...";
+        btnSelectKanban.Location = new Point(370, 8);
+        btnSelectKanban.Click += btnSelectKanban_Click;
 
         gridSteps.Location = new Point(10, 45);
         gridSteps.Size = new Size(700, 220);
@@ -110,6 +120,7 @@ partial class frmTotalWeight
         ClientSize = new Size(730, 400);
         Controls.Add(lblBarcode);
         Controls.Add(txtBarcode);
+        Controls.Add(btnSelectKanban);
         Controls.Add(gridSteps);
         Controls.Add(btnSave);
         Controls.Add(btnAccept);

@@ -22,6 +22,13 @@ public sealed class ApiClient : IApiClient
         return new LoginResultAndToken(body!.Token, body.Username, body.FullName);
     }
 
+    public async Task<List<KanbanSummaryDto>> GetPendingKanbansAsync(CancellationToken ct = default)
+    {
+        var response = await _httpClient.GetAsync("api/kanbans", ct);
+        await ThrowIfError(response, ct);
+        return (await response.Content.ReadFromJsonAsync<List<KanbanSummaryDto>>(cancellationToken: ct))!;
+    }
+
     public async Task<KanbanDetailDto> GetKanbanAsync(string barcode, CancellationToken ct = default)
     {
         var response = await _httpClient.GetAsync($"api/kanban/{Uri.EscapeDataString(barcode)}", ct);

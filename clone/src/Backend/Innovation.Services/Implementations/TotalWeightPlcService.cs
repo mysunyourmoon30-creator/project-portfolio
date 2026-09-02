@@ -57,6 +57,11 @@ public sealed class TotalWeightPlcService : ITotalWeightPlcService
         return new KanbanDetailDto(kanban.Id, kanban.Barcode, kanban.PlanId, kanban.Number, kanban.Status, steps);
     }
 
+    public List<KanbanSummaryDto> GetPendingKanbans() => WithUnitOfWork(uow =>
+        uow.KbTogetherRepository.GetWhere(x => x.Status == "Pending")
+            .Select(x => new KanbanSummaryDto(x.Id, x.Barcode, x.Status))
+            .ToList());
+
     public SaveTotalWeightResultDto SaveTotalWeight(SaveTotalWeightRequestDto request)
     {
         using var uow = _unitOfWorkFactory.CreateSiloUnitOfWork();

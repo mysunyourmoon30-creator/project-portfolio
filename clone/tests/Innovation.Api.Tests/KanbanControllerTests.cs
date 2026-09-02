@@ -23,6 +23,19 @@ public class KanbanControllerTests
     }
 
     [Fact]
+    public async Task GetPendingKanbans_ReturnsSeededDemoKanban()
+    {
+        using var factory = new CustomWebApplicationFactory();
+        var client = await factory.CreateClient().WithOperatorLoginAsync();
+
+        var response = await client.GetAsync("/api/kanbans");
+
+        response.StatusCode.Should().Be(HttpStatusCode.OK);
+        var body = await response.Content.ReadFromJsonAsync<List<KanbanSummaryDto>>();
+        body.Should().ContainSingle(k => k.Barcode == "KB0000001" && k.Status == "Pending");
+    }
+
+    [Fact]
     public async Task GetKanban_UnknownBarcode_Returns404WithBarcodeNotFoundType()
     {
         using var factory = new CustomWebApplicationFactory();
