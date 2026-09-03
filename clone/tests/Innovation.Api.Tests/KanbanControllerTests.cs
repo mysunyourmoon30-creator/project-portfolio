@@ -1,7 +1,10 @@
 using System.Net;
 using System.Net.Http.Json;
 using FluentAssertions;
+using Innovation.Data;
 using Innovation.Services.Contracts;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.DependencyInjection;
 using Xunit;
 
 namespace Innovation.Api.Tests;
@@ -107,5 +110,38 @@ public class KanbanControllerTests
         var response = await client.PostAsJsonAsync("/api/totalweight/accept", new AcceptStepRequestDto(kanban.KbTogetherId, 1));
 
         response.StatusCode.Should().Be(HttpStatusCode.NoContent);
+    }
+
+    [Fact]
+    public async Task SaveTotalWeight_HappyPath_StampsSavedByUserId()
+    {
+        using var factory = new CustomWebApplicationFactory();
+        var client = await factory.CreateClient().WithOperatorLoginAsync();
+        var kanban = await (await client.GetAsync("/api/kanban/KB0000001")).Content.ReadFromJsonAsync<KanbanDetailDto>();
+
+        await client.PostAsJsonAsync("/api/totalweight", new SaveTotalWeightRequestDto(
+            kanban!.KbTogetherId, new List<StepWeightDto> { new(1, 10.00m) }));
+
+        using var db = factory.Services.GetRequiredService<IDbContextFactory<SiloDbContext>>().CreateDbContext();
+        var totalWeight = await db.TotalWeight.SingleAsync(x => x.KbTogetherId == kanban.KbTogetherId);
+        totalWeight.SavedByUserId.Should().Be(1); // seeded operator1's Id
+    }
+
+    [Fact]
+    public async Task Accept_AfterSubmittingWeight_StampsAcceptedByUserIdAndTotalWeightId()
+    {
+        using var factory = new CustomWebApplicationFactory();
+        var client = await factory.CreateClient().WithOperatorLoginAsync();
+        var kanban = await (await client.GetAsync("/api/kanban/KB0000001")).Content.ReadFromJsonAsync<KanbanDetailDto>();
+
+        await client.PostAsJsonAsync("/api/totalweight", new SaveTotalWeightRequestDto(
+            kanban!.KbTogetherId, new List<StepWeightDto> { new(1, 10.00m) }));
+        await client.PostAsJsonAsync("/api/totalweight/accept", new AcceptStepRequestDto(kanban.KbTogetherId, 1));
+
+        using var db = factory.Services.GetRequiredService<IDbContextFactory<SiloDbContext>>().CreateDbContext();
+        var totalWeight = await db.TotalWeight.SingleAsync(x => x.KbTogetherId == kanban.KbTogetherId);
+        var acceptHis = await db.TwAcceptWeightHis.SingleAsync(x => x.StepNo == 1);
+        acceptHis.AcceptedByUserId.Should().Be(1);
+        acceptHis.TotalWeightId.Should().Be(totalWeight.Id);
     }
 }

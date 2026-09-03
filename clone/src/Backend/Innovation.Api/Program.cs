@@ -5,6 +5,7 @@ using Innovation.Core.UnitOfWork;
 using Innovation.Data;
 using Innovation.Services.Contracts;
 using Innovation.Services.CurrentSite;
+using Innovation.Services.CurrentUser;
 using Innovation.Services.Implementations;
 using Innovation.Services.Security;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
@@ -20,6 +21,8 @@ builder.Services.AddDbContextFactory<SiloDbContext>(options => options.UseSqlite
 builder.Services.AddScoped<IUnitOfWorkFactory, Innovation.Repositories.UnitOfWorkFactory>();
 builder.Services.AddSingleton<UsrWtPasswordHasher>();
 builder.Services.AddSingleton<ICurrentSiteAccessor, CurrentSiteAccessor>();
+builder.Services.AddHttpContextAccessor();
+builder.Services.AddScoped<ICurrentUserAccessor, CurrentUserAccessor>();
 builder.Services.AddScoped<ITotalWeightPlcService, TotalWeightPlcService>();
 builder.Services.AddSingleton<JwtTokenIssuer>();
 

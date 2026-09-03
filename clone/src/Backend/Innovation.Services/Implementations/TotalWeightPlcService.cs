@@ -2,6 +2,7 @@ using Innovation.Core.Domain;
 using Innovation.Core.Entities;
 using Innovation.Core.UnitOfWork;
 using Innovation.Services.Contracts;
+using Innovation.Services.CurrentUser;
 using Innovation.Services.Errors;
 using Innovation.Services.Security;
 
@@ -15,11 +16,13 @@ public sealed class TotalWeightPlcService : ITotalWeightPlcService
 {
     private readonly IUnitOfWorkFactory _unitOfWorkFactory;
     private readonly UsrWtPasswordHasher _passwordHasher;
+    private readonly ICurrentUserAccessor _currentUserAccessor;
 
-    public TotalWeightPlcService(IUnitOfWorkFactory unitOfWorkFactory, UsrWtPasswordHasher passwordHasher)
+    public TotalWeightPlcService(IUnitOfWorkFactory unitOfWorkFactory, UsrWtPasswordHasher passwordHasher, ICurrentUserAccessor currentUserAccessor)
     {
         _unitOfWorkFactory = unitOfWorkFactory;
         _passwordHasher = passwordHasher;
+        _currentUserAccessor = currentUserAccessor;
     }
 
     public LoginResultDto Login(LoginRequestDto request)
@@ -99,6 +102,7 @@ public sealed class TotalWeightPlcService : ITotalWeightPlcService
             KbTogetherId = request.KbTogetherId,
             TotalActualWeight = totalActualWeight,
             SavedAt = DateTime.UtcNow,
+            SavedByUserId = _currentUserAccessor.UserId,
         };
         uow.TotalWeightRepository.Add(totalWeight);
 
@@ -122,11 +126,19 @@ public sealed class TotalWeightPlcService : ITotalWeightPlcService
 
         step.Accepted = true;
         uow.WeightingRepository.Update(step);
+
+        // step.ActualWeight is only ever set by SaveTotalWeight (the desktop
+        // client's own tolerance check never calls the API), so the parent
+        // TotalWeight row is guaranteed to exist by the time Accept can
+        // succeed - the ?? 0 fallback is defensive, not an expected path.
+        var totalWeight = uow.TotalWeightRepository.Find(x => x.KbTogetherId == request.KbTogetherId);
         uow.TwAcceptWeightHisRepository.Add(new TwAcceptWeightHis
         {
+            TotalWeightId = totalWeight?.Id ?? 0,
             StepNo = step.StepNo,
             AcceptedWeight = step.ActualWeight.Value,
             AcceptedAt = DateTime.UtcNow,
+            AcceptedByUserId = _currentUserAccessor.UserId,
         });
         uow.Save();
     }

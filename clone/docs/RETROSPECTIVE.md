@@ -266,6 +266,47 @@ match what actually painted to the screen. Both bugs here were invisible to
 layout), and invisible to reading the source - only a rendered screenshot,
 looked at directly, caught them.
 
+## An eighth bug: audit columns that existed in the schema but were never written
+
+Reviewing the API against a general 7-point data-access security checklist
+(Authenticate / Authorize / Validate / Safe Query / Limit / Mask / Audit) -
+not a live run this time, a structured review of the code against an
+external checklist - found that `TotalWeight.SavedByUserId` and
+`TwAcceptWeightHis.AcceptedByUserId` were both always `0`. The columns exist
+in the schema, `SavedAt`/`AcceptedAt` (the timestamp half of "who did what
+when") were genuinely populated, but `TotalWeightPlcService.SaveTotalWeight`
+and `.Accept` never read the authenticated user's id to stamp the "who"
+half - despite that id sitting right there in the JWT's
+`ClaimTypes.NameIdentifier` claim on every request (`JwtTokenIssuer.cs`
+issues it, nothing ever read it back out).
+
+While in `Accept()` fixing this, a second instance of the same class of gap
+turned up in the same method: `TwAcceptWeightHis.TotalWeightId` (the FK
+linking an accept record back to the total-weight session it belongs to)
+was also never set. Fixed alongside the user-id fix since it's the same
+root cause (audit trail wired halfway) in the same few lines - confirmed
+safe because `Weighting.ActualWeight` (required for `Accept` to succeed at
+all) is only ever set by `SaveTotalWeight`, so the parent `TotalWeight` row
+is guaranteed to already exist by the time `Accept` runs.
+
+Fix followed the project's own established pattern: `ICurrentSiteAccessor`
+already exists as a "resolve a request-scoped value once via DI" abstraction
+(`Innovation.Services/CurrentSite/`), so `ICurrentUserAccessor` was added as
+its sibling - interface in `Innovation.Services` (plain `net8.0`, no
+framework reference), implementation in `Innovation.Api/Common/` (needs
+`IHttpContextAccessor`, same reason `JwtTokenIssuer` lives there instead of
+`Innovation.Services`). Verified with two new API-integration tests that
+read the audit columns directly via `IDbContextFactory<SiloDbContext>`
+(deliberately not exposed through any response DTO, since these are
+internal audit fields, not something the desktop client needs to see).
+
+**Lesson, reinforced a sixth time:** a schema column existing is not proof
+a feature works - `SavedAt`/`AcceptedAt` being correctly populated made it
+easy to assume the adjacent `*ByUserId` columns were too, since they're
+part of "the same" audit trail conceptually. Nothing short of grepping for
+where those specific fields get assigned (and finding nothing) surfaced
+that half the audit trail was silently dead since it was written.
+
 ## What I'd do differently with more time
 
 - Build the WinForms designer surfaces properly (this clone hand-writes
